@@ -2,84 +2,93 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>My LootLabs Prototype</title>
+  <title>Sub4Link</title>
   <style>
     body {
       background: #111;
       color: #0f0;
       font-family: monospace;
-      text-align: center;
       padding: 50px;
+      text-align: center;
     }
-
+    input {
+      width: 80%;
+      padding: 10px;
+      margin: 10px 0;
+      font-size: 18px;
+    }
     button {
       background: #0f0;
       color: #000;
-      border: none;
-      padding: 15px 30px;
+      padding: 10px 30px;
       font-size: 20px;
       cursor: pointer;
-      border-radius: 10px;
-      transition: background 0.3s;
+      border: none;
+      border-radius: 8px;
+      margin-top: 20px;
     }
-
-    button:hover {
-      background: #0c0;
+    iframe {
+      width: 90%;
+      height: 400px;
+      border: none;
+      margin: 20px 0;
     }
-
-    .crate {
-      margin-top: 40px;
-      font-size: 24px;
+    #result a {
+      color: #0f0;
     }
   </style>
 </head>
 <body>
 
-  <h1>💎 Welcome to My LootLabs 💎</h1>
-
-  <div id="home">
-    <button id="generateBtn">Open Crate</button>
+  <div id="creator">
+    <h1>Create a Sub4Link Page</h1>
+    <input id="profile" placeholder="Your TikTok/YouTube Profile Link"><br>
+    <input id="video" placeholder="Video Link (TikTok/YouTube)"><br>
+    <input id="message" placeholder="Instruction (e.g. 'Like the video to get the link')"><br>
+    <input id="hiddenLink" placeholder="Hidden Link (the real content)"><br>
+    <button onclick="generate()">Generate Link</button>
+    <p id="result"></p>
   </div>
 
-  <div id="crate" style="display: none;">
-    <h2>Your Crate</h2>
-    <p id="crateCode"></p>
-    <p id="crateReward" class="crate"></p>
+  <div id="viewer" style="display: none;">
+    <h1>🔒 Do This To Unlock 🔑</h1>
+    <p id="showMessage"></p>
+    <iframe id="videoFrame" src="" allowfullscreen></iframe><br>
+    <button onclick="reveal()">I Did It, Give Me The Link</button>
+    <p id="theLink" style="margin-top:20px;"></p>
+    <p><a id="profileLink" href="" target="_blank">Visit Creator's Profile</a></p>
   </div>
 
   <script>
-    // Elements
-    const generateBtn = document.getElementById('generateBtn');
-    const homeDiv = document.getElementById('home');
-    const crateDiv = document.getElementById('crate');
-    const crateCode = document.getElementById('crateCode');
-    const crateReward = document.getElementById('crateReward');
-
-    // Possible rewards
-    const rewards = ["Shadow Dragon 🐉", "Frost Dragon ❄️", "Parrot 🦜", "Giraffe 🦒"];
-
-    // Check if we have a ?code in URL
     const params = new URLSearchParams(window.location.search);
-    const code = params.get('code');
+    const profile = params.get('profile');
+    const video = params.get('video');
+    const message = params.get('message');
+    const hidden = params.get('hidden');
 
-    if (code) {
-      // Show crate view
-      homeDiv.style.display = 'none';
-      crateDiv.style.display = 'block';
+    if (video) {
+      // If URL has params → show viewer mode
+      document.getElementById('creator').style.display = 'none';
+      document.getElementById('viewer').style.display = 'block';
 
-      // Show code
-      crateCode.textContent = "Crate Code: " + code;
-
-      // Pick random reward
-      const randomReward = rewards[Math.floor(Math.random() * rewards.length)];
-      crateReward.textContent = "You got: " + randomReward;
+      document.getElementById('showMessage').textContent = decodeURIComponent(message);
+      document.getElementById('videoFrame').src = decodeURIComponent(video);
+      document.getElementById('profileLink').href = decodeURIComponent(profile);
     }
 
-    // Button click to generate new crate
-    generateBtn.onclick = () => {
-      const randomString = Math.random().toString(36).substring(2, 8);
-      window.location.href = `${window.location.pathname}?code=${randomString}`;
-    };
+    function generate() {
+      const p = encodeURIComponent(document.getElementById('profile').value);
+      const v = encodeURIComponent(document.getElementById('video').value);
+      const m = encodeURIComponent(document.getElementById('message').value);
+      const h = encodeURIComponent(document.getElementById('hiddenLink').value);
+
+      const link = `${window.location.origin}${window.location.pathname}?profile=${p}&video=${v}&message=${m}&hidden=${h}`;
+      document.getElementById('result').innerHTML = `Share this link:<br><a href="${link}" target="_blank">${link}</a>`;
+    }
+
+    function reveal() {
+      document.getElementById('theLink').innerHTML = `<a href="${decodeURIComponent(hidden)}" target="_blank">${decodeURIComponent(hidden)}</a>`;
+    }
   </script>
 
 </body>
