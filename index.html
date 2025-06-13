@@ -56,7 +56,7 @@
     <input id="video" placeholder="Video Link (TikTok/YouTube)"><br>
     <input id="action" placeholder="Action (Subscribe, Follow, Like Video)"><br>
     <input id="hiddenLink" placeholder="Hidden Link (the reward)"><br>
-    <button onclick="generate()">Generate Link</button>
+    <button onclick="generate()">Generate & Preview</button>
     <p id="result"></p>
   </div>
 
@@ -77,8 +77,7 @@
     const action = params.get('action');
     const hidden = params.get('hidden');
 
-    if (video) {
-      // Viewer mode
+    function showViewer(title, profile, video, action, hidden) {
       document.getElementById('creator').style.display = 'none';
       document.getElementById('viewer').style.display = 'block';
 
@@ -86,6 +85,14 @@
       document.getElementById('instruction').textContent = `Please ${decodeURIComponent(action)} to unlock the link!`;
       document.getElementById('videoFrame').src = decodeURIComponent(video);
       document.getElementById('profileLink').href = decodeURIComponent(profile);
+
+      // Store hidden link for reveal
+      window.hiddenLink = decodeURIComponent(hidden);
+    }
+
+    if (title && profile && video && action && hidden) {
+      // If URL has params, show viewer
+      showViewer(title, profile, video, action, hidden);
     }
 
     function generate() {
@@ -95,12 +102,17 @@
       const a = encodeURIComponent(document.getElementById('action').value);
       const h = encodeURIComponent(document.getElementById('hiddenLink').value);
 
-      const link = `${window.location.origin}${window.location.pathname}?title=${t}&profile=${p}&video=${v}&action=${a}&hidden=${h}`;
-      document.getElementById('result').innerHTML = `✅ <strong>Share this link:</strong><br><a href="${link}" target="_blank">${link}</a>`;
+      const link = `${window.location.pathname}?title=${t}&profile=${p}&video=${v}&action=${a}&hidden=${h}`;
+
+      // Optionally show link for copy
+      document.getElementById('result').innerHTML = `✅ <strong>Direct link:</strong><br><a href="${link}" target="_blank">${link}</a>`;
+
+      // Immediately switch to viewer page without needing manual reload
+      showViewer(t, p, v, a, h);
     }
 
     function reveal() {
-      document.getElementById('theLink').innerHTML = `<a href="${decodeURIComponent(hidden)}" target="_blank">${decodeURIComponent(hidden)}</a>`;
+      document.getElementById('theLink').innerHTML = `<a href="${window.hiddenLink}" target="_blank">${window.hiddenLink}</a>`;
     }
   </script>
 
