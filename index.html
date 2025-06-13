@@ -2,254 +2,77 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Global Posts YouTube Style</title>
+  <title>Fake Global Chat</title>
   <style>
     body {
-      background: #fff;
-      color: #000;
       font-family: Arial, sans-serif;
-      margin: 0;
-    }
-    header {
-      background: #cc0000;
-      color: #fff;
+      background: #f5f5f5;
       padding: 20px;
       text-align: center;
     }
-    main {
+    #login, #chat {
+      max-width: 600px;
+      margin: 20px auto;
+      background: #fff;
       padding: 20px;
-      max-width: 800px;
-      margin: auto;
+      border-radius: 8px;
     }
-    input, textarea {
-      width: 100%;
-      padding: 10px;
-      margin: 8px 0;
-      font-size: 16px;
-    }
-    button {
-      background: #cc0000;
-      color: #fff;
-      padding: 10px 20px;
-      font-size: 16px;
-      border: none;
-      cursor: pointer;
-      margin: 8px 0;
-    }
-    .post {
-      border: 1px solid #ddd;
-      padding: 15px;
-      margin: 20px 0;
-    }
-    .post h2 {
-      margin: 0 0 10px;
-    }
-    video, iframe {
-      width: 100%;
+    #messages {
+      border: 1px solid #ccc;
       height: 300px;
-      margin: 10px 0;
+      overflow-y: scroll;
+      text-align: left;
+      padding: 10px;
+      background: #fafafa;
     }
-    .actions {
-      margin: 10px 0;
-    }
-    .actions button {
-      background: #eee;
-      color: #000;
-      margin-right: 10px;
-    }
-    .comments {
-      margin-top: 15px;
-    }
-    .comments p {
-      background: #f0f0f0;
-      padding: 8px;
+    input, button {
+      padding: 10px;
       margin: 5px 0;
-    }
-    a {
-      color: #cc0000;
+      width: 100%;
     }
   </style>
 </head>
 <body>
 
-  <header>
-    <h1>📺 Global Posts</h1>
-  </header>
+  <div id="login">
+    <h2>Enter a username to join chat</h2>
+    <input id="usernameInput" placeholder="Username">
+    <button onclick="joinChat()">Join Chat</button>
+  </div>
 
-  <main>
-    <section id="create">
-      <h2>Create a New Post</h2>
-      <input id="postTitle" placeholder="Title (required)">
-      <textarea id="postDescription" placeholder="Description (required)" rows="3"></textarea>
-      <input id="videoURL" placeholder="Video URL (optional)">
-      <p>OR Upload Video File (optional):</p>
-      <input type="file" id="videoFile" accept="video/*">
-      <button onclick="createPost()">Post</button>
-    </section>
-
-    <section id="posts">
-      <h2>🌍 All Posts</h2>
-      <div id="postsList"></div>
-    </section>
-
-    <section id="singlePost" style="display: none;">
-      <button onclick="goHome()">⬅️ Back to Home</button>
-      <div id="singleContent"></div>
-    </section>
-  </main>
+  <div id="chat" style="display:none;">
+    <h2>Global Chat</h2>
+    <div id="messages"></div>
+    <input id="messageInput" placeholder="Type a message...">
+    <button onclick="sendMessage()">Send</button>
+  </div>
 
   <script>
-    let posts = JSON.parse(localStorage.getItem('globalPosts') || '[]');
+    let username = null;
 
-    function savePosts() {
-      localStorage.setItem('globalPosts', JSON.stringify(posts));
-    }
-
-    function createPost() {
-      const title = document.getElementById('postTitle').value.trim();
-      const desc = document.getElementById('postDescription').value.trim();
-      const url = document.getElementById('videoURL').value.trim();
-      const fileInput = document.getElementById('videoFile');
-      const file = fileInput.files[0];
-
-      if (!title || !desc) {
-        alert('Title and Description are required.');
-        return;
-      }
-
-      if (url) {
-        savePost(title, desc, url);
-      } else if (file) {
-        const reader = new FileReader();
-        reader.onload = function(e) {
-          savePost(title, desc, e.target.result);
-        };
-        reader.readAsDataURL(file);
+    function joinChat() {
+      const input = document.getElementById('usernameInput').value.trim();
+      if (input) {
+        username = input;
+        document.getElementById('login').style.display = 'none';
+        document.getElementById('chat').style.display = 'block';
       } else {
-        savePost(title, desc, '');
+        alert("Please enter a username!");
       }
     }
 
-    function savePost(title, desc, video) {
-      const id = Date.now();
-      const newPost = { 
-        id, title, desc, video, 
-        views: 0, likes: 0, dislikes: 0, comments: [] 
-      };
-      posts.push(newPost);
-      savePosts();
-      renderPosts();
-      clearForm();
-    }
-
-    function renderPosts() {
-      const list = document.getElementById('postsList');
-      list.innerHTML = '';
-      posts.slice().reverse().forEach(p => {
-        const div = document.createElement('div');
-        div.className = 'post';
-        div.innerHTML = `
-          <h2>${p.title}</h2>
-          <p>${p.desc}</p>
-          ${renderVideo(p.video)}
-          <p>👁️ ${p.views} | 👍 ${p.likes} | 👎 ${p.dislikes}</p>
-          <p><a href="#${p.id}">🔗 Watch Post</a></p>
-        `;
-        list.appendChild(div);
-      });
-    }
-
-    function renderVideo(video) {
-      if (!video) return '';
-      if (video.startsWith('http')) {
-        return `<iframe src="${video}" frameborder="0" allowfullscreen></iframe>`;
-      } else {
-        return `<video controls src="${video}"></video>`;
+    function sendMessage() {
+      const msgInput = document.getElementById('messageInput');
+      const msg = msgInput.value.trim();
+      if (msg) {
+        const messagesDiv = document.getElementById('messages');
+        const p = document.createElement('p');
+        p.textContent = `${username}: ${msg}`;
+        messagesDiv.appendChild(p);
+        msgInput.value = '';
+        messagesDiv.scrollTop = messagesDiv.scrollHeight;
       }
     }
-
-    function renderSinglePost(id) {
-      const post = posts.find(p => p.id == id);
-      if (!post) {
-        alert('Post not found.');
-        return;
-      }
-      post.views++;
-      savePosts();
-
-      document.getElementById('create').style.display = 'none';
-      document.getElementById('posts').style.display = 'none';
-      document.getElementById('singlePost').style.display = 'block';
-
-      const content = document.getElementById('singleContent');
-      content.innerHTML = `
-        <h2>${post.title}</h2>
-        <p>${post.desc}</p>
-        ${renderVideo(post.video)}
-        <div class="actions">
-          <button onclick="like(${post.id})">👍 ${post.likes}</button>
-          <button onclick="dislike(${post.id})">👎 ${post.dislikes}</button>
-          <span>👁️ ${post.views} views</span>
-        </div>
-        <div class="comments">
-          <h3>Comments</h3>
-          ${post.comments.map(c => `<p>${c}</p>`).join('')}
-          <textarea id="newComment" placeholder="Add a comment"></textarea>
-          <button onclick="addComment(${post.id})">Comment</button>
-        </div>
-      `;
-    }
-
-    function like(id) {
-      const post = posts.find(p => p.id == id);
-      post.likes++;
-      savePosts();
-      renderSinglePost(id);
-    }
-
-    function dislike(id) {
-      const post = posts.find(p => p.id == id);
-      post.dislikes++;
-      savePosts();
-      renderSinglePost(id);
-    }
-
-    function addComment(id) {
-      const comment = document.getElementById('newComment').value.trim();
-      if (!comment) return;
-      const post = posts.find(p => p.id == id);
-      post.comments.push(comment);
-      savePosts();
-      renderSinglePost(id);
-    }
-
-    function goHome() {
-      document.getElementById('create').style.display = 'block';
-      document.getElementById('posts').style.display = 'block';
-      document.getElementById('singlePost').style.display = 'none';
-      window.location.hash = '';
-    }
-
-    function clearForm() {
-      document.getElementById('postTitle').value = '';
-      document.getElementById('postDescription').value = '';
-      document.getElementById('videoURL').value = '';
-      document.getElementById('videoFile').value = '';
-    }
-
-    // Routing
-    window.addEventListener('hashchange', handleHash);
-    function handleHash() {
-      const id = window.location.hash.substring(1);
-      if (id) {
-        renderSinglePost(id);
-      } else {
-        goHome();
-      }
-    }
-
-    handleHash();
-    renderPosts();
   </script>
 
 </body>
