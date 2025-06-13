@@ -1,9 +1,86 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
+  <title>My LootLabs Prototype</title>
+  <style>
+    body {
+      background: #111;
+      color: #0f0;
+      font-family: monospace;
+      text-align: center;
+      padding: 50px;
+    }
+
+    button {
+      background: #0f0;
+      color: #000;
+      border: none;
+      padding: 15px 30px;
+      font-size: 20px;
+      cursor: pointer;
+      border-radius: 10px;
+      transition: background 0.3s;
+    }
+
+    button:hover {
+      background: #0c0;
+    }
+
+    .crate {
+      margin-top: 40px;
+      font-size: 24px;
+    }
+  </style>
 </head>
 <body>
-  <img src="https://raw.githubusercontent.com/skidwxecuter/index.html/main/Screenshot_20250527-152307.jpg" alt="Image" style="max-width: 100%; height: auto;">
+
+  <h1>💎 Welcome to My LootLabs 💎</h1>
+
+  <div id="home">
+    <button id="generateBtn">Open Crate</button>
+  </div>
+
+  <div id="crate" style="display: none;">
+    <h2>Your Crate</h2>
+    <p id="crateCode"></p>
+    <p id="crateReward" class="crate"></p>
+  </div>
+
+  <script>
+    // Elements
+    const generateBtn = document.getElementById('generateBtn');
+    const homeDiv = document.getElementById('home');
+    const crateDiv = document.getElementById('crate');
+    const crateCode = document.getElementById('crateCode');
+    const crateReward = document.getElementById('crateReward');
+
+    // Possible rewards
+    const rewards = ["Shadow Dragon 🐉", "Frost Dragon ❄️", "Parrot 🦜", "Giraffe 🦒"];
+
+    // Check if we have a ?code in URL
+    const params = new URLSearchParams(window.location.search);
+    const code = params.get('code');
+
+    if (code) {
+      // Show crate view
+      homeDiv.style.display = 'none';
+      crateDiv.style.display = 'block';
+
+      // Show code
+      crateCode.textContent = "Crate Code: " + code;
+
+      // Pick random reward
+      const randomReward = rewards[Math.floor(Math.random() * rewards.length)];
+      crateReward.textContent = "You got: " + randomReward;
+    }
+
+    // Button click to generate new crate
+    generateBtn.onclick = () => {
+      const randomString = Math.random().toString(36).substring(2, 8);
+      window.location.href = `${window.location.pathname}?code=${randomString}`;
+    };
+  </script>
+
 </body>
 </html>
