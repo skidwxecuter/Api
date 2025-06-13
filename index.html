@@ -36,42 +36,51 @@
     #result a {
       color: #0f0;
     }
+    .highlight {
+      font-weight: bold;
+      color: #0f0;
+      font-size: 24px;
+    }
+    a {
+      color: #0f0;
+      text-decoration: underline;
+    }
   </style>
 </head>
 <body>
 
   <div id="creator">
     <h1>Create a Sub4Link Page</h1>
-    <input id="profile" placeholder="Your TikTok/YouTube Profile Link"><br>
+    <input id="profile" placeholder="Your TikTok/YouTube Profile Link (where to follow/sub)"><br>
     <input id="video" placeholder="Video Link (TikTok/YouTube)"><br>
-    <input id="message" placeholder="Instruction (e.g. 'Like the video to get the link')"><br>
-    <input id="hiddenLink" placeholder="Hidden Link (the real content)"><br>
+    <input id="action" placeholder="Action (e.g. Subscribe, Follow, Like Video)"><br>
+    <input id="hiddenLink" placeholder="Hidden Link (the reward)"><br>
     <button onclick="generate()">Generate Link</button>
     <p id="result"></p>
   </div>
 
   <div id="viewer" style="display: none;">
-    <h1>🔒 Do This To Unlock 🔑</h1>
-    <p id="showMessage"></p>
+    <h1>🔒 Complete This To Unlock 🔑</h1>
+    <p class="highlight" id="instruction"></p>
+    <p>👉 <a id="profileLink" href="" target="_blank">Go to Profile</a></p>
     <iframe id="videoFrame" src="" allowfullscreen></iframe><br>
     <button onclick="reveal()">I Did It, Give Me The Link</button>
     <p id="theLink" style="margin-top:20px;"></p>
-    <p><a id="profileLink" href="" target="_blank">Visit Creator's Profile</a></p>
   </div>
 
   <script>
     const params = new URLSearchParams(window.location.search);
     const profile = params.get('profile');
     const video = params.get('video');
-    const message = params.get('message');
+    const action = params.get('action');
     const hidden = params.get('hidden');
 
     if (video) {
-      // If URL has params → show viewer mode
+      // Viewer mode
       document.getElementById('creator').style.display = 'none';
       document.getElementById('viewer').style.display = 'block';
 
-      document.getElementById('showMessage').textContent = decodeURIComponent(message);
+      document.getElementById('instruction').textContent = `Please ${decodeURIComponent(action)} to unlock the link!`;
       document.getElementById('videoFrame').src = decodeURIComponent(video);
       document.getElementById('profileLink').href = decodeURIComponent(profile);
     }
@@ -79,11 +88,11 @@
     function generate() {
       const p = encodeURIComponent(document.getElementById('profile').value);
       const v = encodeURIComponent(document.getElementById('video').value);
-      const m = encodeURIComponent(document.getElementById('message').value);
+      const a = encodeURIComponent(document.getElementById('action').value);
       const h = encodeURIComponent(document.getElementById('hiddenLink').value);
 
-      const link = `${window.location.origin}${window.location.pathname}?profile=${p}&video=${v}&message=${m}&hidden=${h}`;
-      document.getElementById('result').innerHTML = `Share this link:<br><a href="${link}" target="_blank">${link}</a>`;
+      const link = `${window.location.origin}${window.location.pathname}?profile=${p}&video=${v}&action=${a}&hidden=${h}`;
+      document.getElementById('result').innerHTML = `✅ <strong>Share this link:</strong><br><a href="${link}" target="_blank">${link}</a>`;
     }
 
     function reveal() {
