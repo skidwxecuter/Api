@@ -1,148 +1,99 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8" />
-  <title>My Pastebin</title>
-  <style>
-    body { background: #111; color: #0f0; font-family: monospace; padding: 20px; }
-    input, textarea { width: 100%; margin: 5px 0; font-size: 16px; padding: 8px; }
-    button { background: #0f0; color: #000; border: none; padding: 10px 20px; margin-top: 10px; cursor: pointer; }
-    a { color: #0f0; }
-    .paste { border-bottom: 1px solid #0f0; padding: 10px 0; }
-    #viewer { display: none; }
-    #comments { margin-top: 20px; border-top: 1px solid #0f0; padding-top: 10px; }
-    .comment { border-bottom: 1px dashed #0f0; margin-bottom: 5px; }
-  </style>
+  <title>Announcement Control</title>
+  <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body>
+<body class="bg-gray-100 p-6">
+  <div class="max-w-4xl mx-auto bg-white p-6 rounded-lg shadow">
+    <h1 class="text-2xl font-bold mb-6">Robux Generator Announcements</h1>
+    
+    <div class="mb-8 p-4 bg-blue-50 rounded-lg">
+      <h2 class="text-xl font-semibold mb-4">Create New Announcement</h2>
+      <div class="space-y-4">
+        <div>
+          <label class="block mb-1">Admin Key</label>
+          <input type="password" id="admin-key" class="w-full p-2 border rounded">
+        </div>
+        <div>
+          <label class="block mb-1">Title</label>
+          <input type="text" id="title" class="w-full p-2 border rounded">
+        </div>
+        <div>
+          <label class="block mb-1">Message</label>
+          <textarea id="message" rows="3" class="w-full p-2 border rounded"></textarea>
+        </div>
+        <div class="flex items-center">
+          <input type="checkbox" id="urgent" class="mr-2">
+          <label>Urgent (red alert)</label>
+        </div>
+        <button onclick="postAnnouncement()" class="bg-blue-500 text-white p-2 rounded hover:bg-blue-600">
+          Post Announcement
+        </button>
+        <p id="status" class="text-green-600 hidden">Posted successfully!</p>
+      </div>
+    </div>
 
-  <h1 id="siteTitle">📄 My Pastebin</h1>
-
-  <div id="creator">
-    <input id="title" placeholder="Title"><br>
-    <textarea id="content" placeholder="Content"></textarea><br>
-    <button onclick="createPaste()">Create Paste</button><br><br>
-    <input id="search" placeholder="Search..." oninput="loadPastes()">
-    <div id="pastes"></div>
-  </div>
-
-  <div id="viewer">
-    <h2 id="pasteTitle"></h2>
-    <p><strong>Views:</strong> <span id="pasteViews"></span> | <strong>Likes:</strong> <span id="pasteLikes"></span>
-      <button onclick="likePaste()">👍 Like</button></p>
-    <pre id="pasteContent"></pre>
-    <button onclick="goHome()">⬅️ Back</button>
-    <p>🔗 Raw Link: <a id="rawLink" href="#" target="_blank">View Raw</a></p>
-
-    <div id="comments">
-      <h3>Comments</h3>
-      <div id="commentList"></div>
-      <textarea id="newComment" placeholder="Add a comment..."></textarea><br>
-      <button onclick="addComment()">Comment</button>
+    <div>
+      <h2 class="text-xl font-semibold mb-4">Current Announcements</h2>
+      <div id="announcements" class="space-y-3"></div>
     </div>
   </div>
 
   <script>
-    const API = 'https://api-90xm.onrender.com';
-    let currentId = null;
+    const API_URL = "https://api-90xm.onrender.com";
+    
+    async function postAnnouncement() {
+      const key = document.getElementById('admin-key').value;
+      const title = document.getElementById('title').value;
+      const message = document.getElementById('message').value;
+      const urgent = document.getElementById('urgent').checked;
 
-    async function createPaste() {
-      const title = document.getElementById('title').value.trim();
-      const content = document.getElementById('content').value.trim();
-      if (!title || !content) return alert('Please fill in both fields!');
-      const res = await fetch(`${API}/api/paste`, {
+      const response = await fetch(`${API_URL}/announcements`, {
         method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({ title, content })
+        headers: {
+          'Content-Type': 'application/json',
+          'x-admin-key': key
+        },
+        body: JSON.stringify({ title, message, isUrgent: urgent })
       });
-      const data = await res.json();
-      const link = `${location.origin}${location.pathname}?id=${data.id}`;
-      const raw = `${link}&raw`;
-      alert(`Paste created!\nView: ${link}\nRaw: ${raw}`);
-      document.getElementById('title').value = '';
-      document.getElementById('content').value = '';
-      loadPastes();
-    }
 
-    async function loadPastes() {
-      const res = await fetch(`${API}/api/pastes`);
-      const pastes = await res.json();
-      const q = document.getElementById('search').value.toLowerCase();
-      const filtered = pastes.filter(p => p.title.toLowerCase().includes(q));
-      document.getElementById('pastes').innerHTML = filtered.map(p =>
-        `<div class="paste">
-          <a href="?id=${p.id}">${p.title}</a><br>
-          <small>${new Date(p.createdAt).toLocaleString()} — ${p.views} views</small>
-        </div>`
-      ).join('');
-    }
-
-    async function viewPaste(id, isRaw) {
-      currentId = id;
-      const res = await fetch(`${API}/api/paste/${id}`);
-      const paste = await res.json();
-
-      if (isRaw) {
-        document.head.innerHTML = '<meta charset="UTF-8">';
-        document.body.innerHTML = `<pre>${paste.content}</pre>`;
-        return;
+      if (response.ok) {
+        document.getElementById('status').classList.remove('hidden');
+        setTimeout(() => {
+          document.getElementById('status').classList.add('hidden');
+        }, 3000);
+        loadAnnouncements();
       }
-
-      document.getElementById('siteTitle').textContent = paste.title;
-      document.getElementById('pasteTitle').textContent = paste.title;
-      document.getElementById('pasteViews').textContent = paste.views;
-      document.getElementById('pasteLikes').textContent = paste.likes || 0;
-      document.getElementById('pasteContent').textContent = paste.content;
-      document.getElementById('rawLink').href = `${location.origin}${location.pathname}?id=${paste.id}&raw`;
-
-      const saved = JSON.parse(localStorage.getItem(`comments-${id}`) || "[]");
-      renderComments(saved);
-
-      document.getElementById('creator').style.display = 'none';
-      document.getElementById('viewer').style.display = 'block';
     }
 
-    function goHome() {
-      history.pushState({}, '', location.pathname);
-      document.getElementById('siteTitle').textContent = "📄 My Pastebin";
-      document.getElementById('creator').style.display = 'block';
-      document.getElementById('viewer').style.display = 'none';
-      loadPastes();
+    async function deleteAnnouncement(id) {
+      const key = document.getElementById('admin-key').value;
+      await fetch(`${API_URL}/announcements/${id}`, {
+        method: 'DELETE',
+        headers: { 'x-admin-key': key }
+      });
+      loadAnnouncements();
     }
 
-    function likePaste() {
-      const likesKey = `likes-${currentId}`;
-      let likes = parseInt(localStorage.getItem(likesKey) || "0");
-      likes++;
-      localStorage.setItem(likesKey, likes);
-      document.getElementById('pasteLikes').textContent = likes;
+    async function loadAnnouncements() {
+      const response = await fetch(`${API_URL}/announcements`);
+      const data = await response.json();
+      
+      const container = document.getElementById('announcements');
+      container.innerHTML = data.map(ann => `
+        <div class="p-3 border rounded-lg ${ann.isUrgent ? 'bg-red-50' : ''}">
+          <div class="flex justify-between">
+            <strong>${ann.title}</strong>
+            <button onclick="deleteAnnouncement(${ann.id})" class="text-red-500">Delete</button>
+          </div>
+          <p class="text-sm">${ann.message}</p>
+          <p class="text-xs text-gray-500">${new Date(ann.createdAt).toLocaleString()}</p>
+        </div>
+      `).join('');
     }
 
-    function renderComments(comments) {
-      document.getElementById('commentList').innerHTML = comments.map(c =>
-        `<div class="comment">${c}</div>`
-      ).join('');
-    }
-
-    function addComment() {
-      const box = document.getElementById('newComment');
-      const text = box.value.trim();
-      if (!text) return;
-      const key = `comments-${currentId}`;
-      const comments = JSON.parse(localStorage.getItem(key) || "[]");
-      comments.push(text);
-      localStorage.setItem(key, JSON.stringify(comments));
-      renderComments(comments);
-      box.value = '';
-    }
-
-    // Route
-    const params = new URLSearchParams(location.search);
-    const id = params.get('id');
-    const isRaw = params.has('raw');
-    if (id) viewPaste(id, isRaw);
-    else loadPastes();
+    loadAnnouncements();
   </script>
-
 </body>
 </html>
