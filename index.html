@@ -2,57 +2,89 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>My Pastebin</title>
+  <title>All-in-One Pastebin</title>
   <style>
     body { font-family: sans-serif; max-width: 800px; margin: auto; background: #121212; color: #eee; }
-    input, textarea { width: 100%; margin: 10px 0; padding: 10px; background: #222; color: #eee; }
-    button { padding: 10px 20px; background: #03a9f4; color: #fff; border: none; cursor: pointer; }
-    .paste { margin: 10px 0; padding: 10px; border-left: 5px solid #03a9f4; background: #1e1e1e; }
+    input, textarea { width: 100%; margin: 10px 0; padding: 10px; background: #1e1e1e; color: #fff; border: none; }
+    button { padding: 10px 20px; background: #03a9f4; border: none; color: #fff; cursor: pointer; }
     a { color: #03a9f4; }
+    .paste { background: #1e1e1e; margin: 10px 0; padding: 10px; border-radius: 8px; }
+    pre { background: #1e1e1e; padding: 20px; border-radius: 8px; overflow-x: auto; }
+    #viewer { display: none; }
   </style>
 </head>
 <body>
-  <h1>My Pastebin</h1>
+  <h1 id="siteTitle">📄 My Pastebin</h1>
 
-  <h2>Create Paste</h2>
-  <input id="title" placeholder="Title">
-  <textarea id="content" placeholder="Your paste..." rows="8"></textarea>
-  <button onclick="createPaste()">Save</button>
+  <div id="creator">
+    <h2>Create a New Paste</h2>
+    <input id="title" placeholder="Title" />
+    <textarea id="content" rows="8" placeholder="Your text here..."></textarea>
+    <button onclick="createPaste()">Create Paste</button>
 
-  <h2>Search</h2>
-  <input id="searchBox" placeholder="Search..." oninput="loadPastes()">
+    <h2>Search Pastes</h2>
+    <input id="search" placeholder="Type to search..." oninput="loadPastes()" />
 
-  <h2>All Pastes</h2>
-  <div id="pastes"></div>
+    <h2>All Pastes</h2>
+    <div id="pastes"></div>
+  </div>
+
+  <div id="viewer">
+    <h1 id="pasteTitle">Loading...</h1>
+    <p><strong>Views:</strong> <span id="pasteViews"></span></p>
+    <pre id="pasteContent"></pre>
+    <p><a href="#" onclick="goHome()">← Back to Home</a></p>
+  </div>
 
   <script>
     const API = 'https://api-90xm.onrender.com';
 
     async function createPaste() {
-      const title = document.getElementById('title').value;
-      const content = document.getElementById('content').value;
+      const title = document.getElementById('title').value.trim();
+      const content = document.getElementById('content').value.trim();
+      if (!title || !content) return alert('Fill in both fields!');
       const res = await fetch(`${API}/api/paste`, {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
         body: JSON.stringify({ title, content })
       });
       const data = await res.json();
-      alert(`Paste created! Link: ${API}/api/paste/${data.id}`);
+      alert(`Created! Click the title in the list to view it.`);
+      document.getElementById('title').value = '';
+      document.getElementById('content').value = '';
       loadPastes();
     }
 
     async function loadPastes() {
-      const q = document.getElementById('searchBox').value;
-      const res = await fetch(`${API}/api/pastes?q=${encodeURIComponent(q)}`);
+      const res = await fetch(`${API}/api/pastes`);
       const pastes = await res.json();
-      const el = document.getElementById('pastes');
-      el.innerHTML = '';
-      pastes.forEach(p => {
-        const div = document.createElement('div');
-        div.className = 'paste';
-        div.innerHTML = `<h3>${p.title}</h3><p>Views: ${p.views}</p><a href="${API}/api/paste/${p.id}" target="_blank">View Raw</a>`;
-        el.appendChild(div);
-      });
+      const q = document.getElementById('search').value.toLowerCase();
+      const filtered = pastes.filter(p => p.title.toLowerCase().includes(q));
+      document.getElementById('pastes').innerHTML = filtered.map(p =>
+        `<div class="paste">
+          <a href="#" onclick="viewPaste('${p.id}')">${p.title}</a><br>
+          <small>${new Date(p.createdAt).toLocaleString()} — ${p.views} views</small>
+        </div>`
+      ).join('');
+    }
+
+    async function viewPaste(id) {
+      const res = await fetch(`${API}/api/paste/${id}`);
+      const paste = await res.json();
+      document.getElementById('siteTitle').textContent = paste.title;
+      document.getElementById('pasteTitle').textContent = paste.title;
+      document.getElementById('pasteViews').textContent = paste.views;
+      document.getElementById('pasteContent').textContent = paste.content;
+
+      document.getElementById('creator').style.display = 'none';
+      document.getElementById('viewer').style.display = 'block';
+    }
+
+    function goHome() {
+      document.getElementById('siteTitle').textContent = "📄 My Pastebin";
+      document.getElementById('creator').style.display = 'block';
+      document.getElementById('viewer').style.display = 'none';
+      loadPastes();
     }
 
     loadPastes();
