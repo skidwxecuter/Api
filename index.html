@@ -57,7 +57,7 @@
       });
       const data = await res.json();
       const link = `${location.origin}${location.pathname}?id=${data.id}`;
-      const raw = `${location.origin}${location.pathname}raw/${data.id}`;
+      const raw = `${link}&raw`;
       alert(`Paste created!\nView: ${link}\nRaw: ${raw}`);
       document.getElementById('title').value = '';
       document.getElementById('content').value = '';
@@ -77,22 +77,24 @@
       ).join('');
     }
 
-    async function viewPaste(id) {
+    async function viewPaste(id, isRaw) {
       currentId = id;
       const res = await fetch(`${API}/api/paste/${id}`);
       const paste = await res.json();
-      // Likes/comments fallback for demo:
-      if (!paste.likes) paste.likes = 0;
-      if (!paste.comments) paste.comments = [];
+
+      if (isRaw) {
+        document.head.innerHTML = '<meta charset="UTF-8">';
+        document.body.innerHTML = `<pre>${paste.content}</pre>`;
+        return;
+      }
 
       document.getElementById('siteTitle').textContent = paste.title;
       document.getElementById('pasteTitle').textContent = paste.title;
       document.getElementById('pasteViews').textContent = paste.views;
-      document.getElementById('pasteLikes').textContent = paste.likes;
+      document.getElementById('pasteLikes').textContent = paste.likes || 0;
       document.getElementById('pasteContent').textContent = paste.content;
-      document.getElementById('rawLink').href = `${location.origin}${location.pathname}raw/${paste.id}`;
+      document.getElementById('rawLink').href = `${location.origin}${location.pathname}?id=${paste.id}&raw`;
 
-      // Comments (temporary local)
       const saved = JSON.parse(localStorage.getItem(`comments-${id}`) || "[]");
       renderComments(saved);
 
@@ -108,7 +110,7 @@
       loadPastes();
     }
 
-    async function likePaste() {
+    function likePaste() {
       const likesKey = `likes-${currentId}`;
       let likes = parseInt(localStorage.getItem(likesKey) || "0");
       likes++;
@@ -134,30 +136,12 @@
       box.value = '';
     }
 
-    async function showRaw(id) {
-      const res = await fetch(`${API}/api/paste/${id}`);
-      const paste = await res.json();
-      document.head.innerHTML = '';
-      document.body.innerHTML = '';
-      const pre = document.createElement('pre');
-      pre.textContent = paste.content;
-      document.body.appendChild(pre);
-    }
-
-    // Route handler
-    const path = location.pathname;
-    if (path.includes('raw/')) {
-      const rawId = path.split('raw/')[1];
-      showRaw(rawId);
-    } else {
-      const params = new URLSearchParams(location.search);
-      const id = params.get('id');
-      if (id) {
-        viewPaste(id);
-      } else {
-        loadPastes();
-      }
-    }
+    // Route
+    const params = new URLSearchParams(location.search);
+    const id = params.get('id');
+    const isRaw = params.has('raw');
+    if (id) viewPaste(id, isRaw);
+    else loadPastes();
   </script>
 
 </body>
