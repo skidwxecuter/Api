@@ -2,150 +2,60 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Mini Pastebin</title>
+  <title>My Pastebin</title>
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #121212;
-      color: #eee;
-      max-width: 800px;
-      margin: auto;
-      padding: 20px;
-    }
-    input, textarea {
-      width: 100%;
-      padding: 10px;
-      margin: 10px 0;
-      background: #222;
-      color: #eee;
-      border: 1px solid #333;
-    }
-    button {
-      padding: 10px 20px;
-      background: #03a9f4;
-      color: #fff;
-      border: none;
-      cursor: pointer;
-    }
-    .paste {
-      background: #1e1e1e;
-      margin: 10px 0;
-      padding: 10px;
-      border-left: 5px solid #03a9f4;
-    }
+    body { font-family: sans-serif; max-width: 800px; margin: auto; background: #121212; color: #eee; }
+    input, textarea { width: 100%; margin: 10px 0; padding: 10px; background: #222; color: #eee; }
+    button { padding: 10px 20px; background: #03a9f4; color: #fff; border: none; cursor: pointer; }
+    .paste { margin: 10px 0; padding: 10px; border-left: 5px solid #03a9f4; background: #1e1e1e; }
     a { color: #03a9f4; }
   </style>
 </head>
 <body>
+  <h1>My Pastebin</h1>
 
-  <h1>📝 Mini Pastebin</h1>
+  <h2>Create Paste</h2>
+  <input id="title" placeholder="Title">
+  <textarea id="content" placeholder="Your paste..." rows="8"></textarea>
+  <button onclick="createPaste()">Save</button>
 
-  <div id="pasteForm">
-    <h2>Create Paste</h2>
-    <input id="title" placeholder="Title (optional)">
-    <textarea id="content" placeholder="Your paste here..." rows="8"></textarea>
-    <button onclick="createPaste()">Save Paste</button>
-  </div>
+  <h2>Search</h2>
+  <input id="searchBox" placeholder="Search..." oninput="loadPastes()">
 
-  <div id="keyGen">
-    <h2>Get API Key</h2>
-    <button onclick="generateApiKey()">Generate Key</button>
-    <p id="apiKeyDisplay"></p>
-  </div>
-
-  <h2>Your Pastes</h2>
-  <input id="searchBox" placeholder="Search pastes..." oninput="loadPastes()">
-  <div id="pasteList"></div>
-
-  <div id="viewPaste" style="display:none;">
-    <h2 id="viewTitle"></h2>
-    <pre id="viewContent"></pre>
-    <button onclick="goHome()">Back</button>
-  </div>
+  <h2>All Pastes</h2>
+  <div id="pastes"></div>
 
   <script>
-    const storage = window.localStorage;
+    const API = 'https://api-90xm.onrender.com';
 
-    // On load, check if we should show a paste by ID
-    const params = new URLSearchParams(location.search);
-    const viewId = params.get('view');
-    if (viewId) {
-      showPaste(viewId);
-    } else {
+    async function createPaste() {
+      const title = document.getElementById('title').value;
+      const content = document.getElementById('content').value;
+      const res = await fetch(`${API}/api/paste`, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ title, content })
+      });
+      const data = await res.json();
+      alert(`Paste created! Link: ${API}/api/paste/${data.id}`);
       loadPastes();
     }
 
-    function createPaste() {
-      const title = document.getElementById('title').value.trim();
-      const content = document.getElementById('content').value.trim();
-      if (!content) {
-        alert("Content cannot be empty!");
-        return;
-      }
-      const id = "paste_" + Date.now();
-      const paste = { id, title, content, time: Date.now() };
-      // Save to localStorage
-      let pastes = JSON.parse(storage.getItem('pastes') || '[]');
-      pastes.push(paste);
-      storage.setItem('pastes', JSON.stringify(pastes));
-      alert("Paste saved! Shareable link copied to clipboard.");
-      const link = location.origin + location.pathname + "?view=" + id;
-      navigator.clipboard.writeText(link);
-      location.href = link;
-    }
-
-    function loadPastes() {
-      const container = document.getElementById('pasteList');
-      const search = document.getElementById('searchBox').value.toLowerCase();
-      const pastes = JSON.parse(storage.getItem('pastes') || '[]').reverse();
-      const filtered = pastes.filter(p => 
-        p.title.toLowerCase().includes(search) || 
-        p.content.toLowerCase().includes(search)
-      );
-      if (filtered.length === 0) {
-        container.innerHTML = "<p>No matching pastes.</p>";
-        return;
-      }
-      container.innerHTML = "";
-      filtered.forEach(paste => {
+    async function loadPastes() {
+      const q = document.getElementById('searchBox').value;
+      const res = await fetch(`${API}/api/pastes?q=${encodeURIComponent(q)}`);
+      const pastes = await res.json();
+      const el = document.getElementById('pastes');
+      el.innerHTML = '';
+      pastes.forEach(p => {
         const div = document.createElement('div');
-        div.className = "paste";
-        div.innerHTML = `<strong>${paste.title || "Untitled"}</strong><br>
-          <a href="?view=${paste.id}">View</a>`;
-        container.appendChild(div);
+        div.className = 'paste';
+        div.innerHTML = `<h3>${p.title}</h3><p>Views: ${p.views}</p><a href="${API}/api/paste/${p.id}" target="_blank">View Raw</a>`;
+        el.appendChild(div);
       });
     }
 
-    function showPaste(id) {
-      document.getElementById('pasteForm').style.display = 'none';
-      document.getElementById('keyGen').style.display = 'none';
-      document.getElementById('pasteList').style.display = 'none';
-      document.getElementById('searchBox').style.display = 'none';
-      const pastes = JSON.parse(storage.getItem('pastes') || '[]');
-      const paste = pastes.find(p => p.id === id);
-      if (!paste) {
-        alert("Paste not found!");
-        location.href = location.pathname;
-        return;
-      }
-      document.getElementById('viewTitle').innerText = paste.title || "Untitled";
-      document.getElementById('viewContent').innerText = paste.content;
-      document.getElementById('viewPaste').style.display = 'block';
-    }
-
-    function goHome() {
-      location.href = location.pathname;
-    }
-
-    function generateApiKey() {
-      let apiKey = storage.getItem('apiKey');
-      if (!apiKey) {
-        apiKey = Math.random().toString(36).substr(2) + Date.now().toString(36);
-        storage.setItem('apiKey', apiKey);
-      }
-      document.getElementById('apiKeyDisplay').innerText = "Your API Key: " + apiKey;
-    }
+    loadPastes();
   </script>
-
 </body>
 </html>
