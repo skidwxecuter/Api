@@ -2,76 +2,148 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Fake Global Chat</title>
+  <title>Mini Pastebin</title>
   <style>
     body {
       font-family: Arial, sans-serif;
-      background: #f5f5f5;
+      background: #121212;
+      color: #eee;
+      max-width: 800px;
+      margin: auto;
       padding: 20px;
-      text-align: center;
     }
-    #login, #chat {
-      max-width: 600px;
-      margin: 20px auto;
-      background: #fff;
-      padding: 20px;
-      border-radius: 8px;
-    }
-    #messages {
-      border: 1px solid #ccc;
-      height: 300px;
-      overflow-y: scroll;
-      text-align: left;
-      padding: 10px;
-      background: #fafafa;
-    }
-    input, button {
-      padding: 10px;
-      margin: 5px 0;
+    input, textarea {
       width: 100%;
+      padding: 10px;
+      margin: 10px 0;
+      background: #222;
+      color: #eee;
+      border: 1px solid #333;
     }
+    button {
+      padding: 10px 20px;
+      background: #03a9f4;
+      color: #fff;
+      border: none;
+      cursor: pointer;
+    }
+    .paste {
+      background: #1e1e1e;
+      margin: 10px 0;
+      padding: 10px;
+      border-left: 5px solid #03a9f4;
+    }
+    a { color: #03a9f4; }
   </style>
 </head>
 <body>
 
-  <div id="login">
-    <h2>Enter a username to join chat</h2>
-    <input id="usernameInput" placeholder="Username">
-    <button onclick="joinChat()">Join Chat</button>
+  <h1>📝 Mini Pastebin</h1>
+
+  <div id="pasteForm">
+    <h2>Create Paste</h2>
+    <input id="title" placeholder="Title (optional)">
+    <textarea id="content" placeholder="Your paste here..." rows="8"></textarea>
+    <button onclick="createPaste()">Save Paste</button>
   </div>
 
-  <div id="chat" style="display:none;">
-    <h2>Global Chat</h2>
-    <div id="messages"></div>
-    <input id="messageInput" placeholder="Type a message...">
-    <button onclick="sendMessage()">Send</button>
+  <div id="keyGen">
+    <h2>Get API Key</h2>
+    <button onclick="generateApiKey()">Generate Key</button>
+    <p id="apiKeyDisplay"></p>
+  </div>
+
+  <h2>Your Pastes</h2>
+  <input id="searchBox" placeholder="Search pastes..." oninput="loadPastes()">
+  <div id="pasteList"></div>
+
+  <div id="viewPaste" style="display:none;">
+    <h2 id="viewTitle"></h2>
+    <pre id="viewContent"></pre>
+    <button onclick="goHome()">Back</button>
   </div>
 
   <script>
-    let username = null;
+    const storage = window.localStorage;
 
-    function joinChat() {
-      const input = document.getElementById('usernameInput').value.trim();
-      if (input) {
-        username = input;
-        document.getElementById('login').style.display = 'none';
-        document.getElementById('chat').style.display = 'block';
-      } else {
-        alert("Please enter a username!");
-      }
+    // On load, check if we should show a paste by ID
+    const params = new URLSearchParams(location.search);
+    const viewId = params.get('view');
+    if (viewId) {
+      showPaste(viewId);
+    } else {
+      loadPastes();
     }
 
-    function sendMessage() {
-      const msgInput = document.getElementById('messageInput');
-      const msg = msgInput.value.trim();
-      if (msg) {
-        const messagesDiv = document.getElementById('messages');
-        const p = document.createElement('p');
-        p.textContent = `${username}: ${msg}`;
-        messagesDiv.appendChild(p);
-        msgInput.value = '';
-        messagesDiv.scrollTop = messagesDiv.scrollHeight;
+    function createPaste() {
+      const title = document.getElementById('title').value.trim();
+      const content = document.getElementById('content').value.trim();
+      if (!content) {
+        alert("Content cannot be empty!");
+        return;
       }
+      const id = "paste_" + Date.now();
+      const paste = { id, title, content, time: Date.now() };
+      // Save to localStorage
+      let pastes = JSON.parse(storage.getItem('pastes') || '[]');
+      pastes.push(paste);
+      storage.setItem('pastes', JSON.stringify(pastes));
+      alert("Paste saved! Shareable link copied to clipboard.");
+      const link = location.origin + location.pathname + "?view=" + id;
+      navigator.clipboard.writeText(link);
+      location.href = link;
+    }
+
+    function loadPastes() {
+      const container = document.getElementById('pasteList');
+      const search = document.getElementById('searchBox').value.toLowerCase();
+      const pastes = JSON.parse(storage.getItem('pastes') || '[]').reverse();
+      const filtered = pastes.filter(p => 
+        p.title.toLowerCase().includes(search) || 
+        p.content.toLowerCase().includes(search)
+      );
+      if (filtered.length === 0) {
+        container.innerHTML = "<p>No matching pastes.</p>";
+        return;
+      }
+      container.innerHTML = "";
+      filtered.forEach(paste => {
+        const div = document.createElement('div');
+        div.className = "paste";
+        div.innerHTML = `<strong>${paste.title || "Untitled"}</strong><br>
+          <a href="?view=${paste.id}">View</a>`;
+        container.appendChild(div);
+      });
+    }
+
+    function showPaste(id) {
+      document.getElementById('pasteForm').style.display = 'none';
+      document.getElementById('keyGen').style.display = 'none';
+      document.getElementById('pasteList').style.display = 'none';
+      document.getElementById('searchBox').style.display = 'none';
+      const pastes = JSON.parse(storage.getItem('pastes') || '[]');
+      const paste = pastes.find(p => p.id === id);
+      if (!paste) {
+        alert("Paste not found!");
+        location.href = location.pathname;
+        return;
+      }
+      document.getElementById('viewTitle').innerText = paste.title || "Untitled";
+      document.getElementById('viewContent').innerText = paste.content;
+      document.getElementById('viewPaste').style.display = 'block';
+    }
+
+    function goHome() {
+      location.href = location.pathname;
+    }
+
+    function generateApiKey() {
+      let apiKey = storage.getItem('apiKey');
+      if (!apiKey) {
+        apiKey = Math.random().toString(36).substr(2) + Date.now().toString(36);
+        storage.setItem('apiKey', apiKey);
+      }
+      document.getElementById('apiKeyDisplay').innerText = "Your API Key: " + apiKey;
     }
   </script>
 
