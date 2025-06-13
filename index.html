@@ -2,118 +2,125 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Sub4Link</title>
+  <title>Global Posts</title>
   <style>
     body {
       background: #111;
       color: #0f0;
       font-family: monospace;
-      padding: 50px;
+      padding: 20px;
       text-align: center;
     }
-    input {
-      width: 80%;
+    input, textarea {
+      width: 90%;
       padding: 10px;
       margin: 10px 0;
-      font-size: 18px;
+      font-size: 16px;
     }
     button {
       background: #0f0;
       color: #000;
       padding: 10px 30px;
-      font-size: 20px;
+      font-size: 18px;
       cursor: pointer;
       border: none;
       border-radius: 8px;
-      margin-top: 20px;
+      margin-top: 10px;
     }
-    iframe {
-      width: 90%;
-      height: 400px;
-      border: none;
+    .post {
+      border: 1px solid #0f0;
       margin: 20px 0;
+      padding: 20px;
+      text-align: left;
     }
-    #result a {
-      color: #0f0;
-    }
-    .highlight {
-      font-weight: bold;
-      color: #0f0;
-      font-size: 24px;
-    }
-    a {
-      color: #0f0;
-      text-decoration: underline;
+    video, iframe {
+      max-width: 100%;
+      height: auto;
+      margin-top: 10px;
     }
   </style>
 </head>
 <body>
 
-  <div id="creator">
-    <h1>Create a Sub4Link Page</h1>
-    <input id="title" placeholder="Page Title (e.g. Free Robux!)"><br>
-    <input id="profile" placeholder="Profile Link (where to follow/sub)"><br>
-    <input id="video" placeholder="Video Link (TikTok/YouTube)"><br>
-    <input id="action" placeholder="Action (Subscribe, Follow, Like Video)"><br>
-    <input id="hiddenLink" placeholder="Hidden Link (the reward)"><br>
-    <button onclick="generate()">Generate & Preview</button>
-    <p id="result"></p>
-  </div>
+  <h1>📢 Create a Post</h1>
+  <input id="postTitle" placeholder="Title (required)"><br>
+  <textarea id="postDescription" placeholder="Description (required)" rows="4"></textarea><br>
+  <input id="videoURL" placeholder="Video URL (optional)"><br>
+  <p>OR Upload Video File (optional):</p>
+  <input type="file" id="videoFile" accept="video/*"><br>
+  <button onclick="createPost()">Create Post</button>
 
-  <div id="viewer" style="display: none;">
-    <h1 id="viewerTitle">🔒 Complete This To Unlock 🔑</h1>
-    <p class="highlight" id="instruction"></p>
-    <p>👉 <a id="profileLink" href="" target="_blank">Go to Profile</a></p>
-    <iframe id="videoFrame" src="" allowfullscreen></iframe><br>
-    <button onclick="reveal()">I Did It, Give Me The Link</button>
-    <p id="theLink" style="margin-top:20px;"></p>
-  </div>
+  <h1>🌍 Global Posts</h1>
+  <div id="posts"></div>
 
   <script>
-    const params = new URLSearchParams(window.location.search);
-    const title = params.get('title');
-    const profile = params.get('profile');
-    const video = params.get('video');
-    const action = params.get('action');
-    const hidden = params.get('hidden');
+    // Load posts from localStorage
+    let posts = JSON.parse(localStorage.getItem('globalPosts') || '[]');
 
-    function showViewer(title, profile, video, action, hidden) {
-      document.getElementById('creator').style.display = 'none';
-      document.getElementById('viewer').style.display = 'block';
+    function createPost() {
+      const title = document.getElementById('postTitle').value.trim();
+      const desc = document.getElementById('postDescription').value.trim();
+      const url = document.getElementById('videoURL').value.trim();
+      const fileInput = document.getElementById('videoFile');
+      const file = fileInput.files[0];
 
-      document.getElementById('viewerTitle').textContent = decodeURIComponent(title) || "🔒 Complete This To Unlock 🔑";
-      document.getElementById('instruction').textContent = `Please ${decodeURIComponent(action)} to unlock the link!`;
-      document.getElementById('videoFrame').src = decodeURIComponent(video);
-      document.getElementById('profileLink').href = decodeURIComponent(profile);
+      if (!title || !desc) {
+        alert('Title and Description are required.');
+        return;
+      }
 
-      // Store hidden link for reveal
-      window.hiddenLink = decodeURIComponent(hidden);
+      let video = '';
+      if (url) {
+        video = url;
+        savePost(title, desc, video);
+      } else if (file) {
+        // Read file as DataURL
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          video = e.target.result; // base64
+          savePost(title, desc, video);
+        }
+        reader.readAsDataURL(file);
+      } else {
+        savePost(title, desc, '');
+      }
     }
 
-    if (title && profile && video && action && hidden) {
-      // If URL has params, show viewer
-      showViewer(title, profile, video, action, hidden);
+    function savePost(title, desc, video) {
+      const newPost = { title, desc, video };
+      posts.push(newPost);
+      localStorage.setItem('globalPosts', JSON.stringify(posts));
+      renderPosts();
+      clearForm();
     }
 
-    function generate() {
-      const t = encodeURIComponent(document.getElementById('title').value);
-      const p = encodeURIComponent(document.getElementById('profile').value);
-      const v = encodeURIComponent(document.getElementById('video').value);
-      const a = encodeURIComponent(document.getElementById('action').value);
-      const h = encodeURIComponent(document.getElementById('hiddenLink').value);
-
-      const link = `${window.location.pathname}?title=${t}&profile=${p}&video=${v}&action=${a}&hidden=${h}`;
-
-      // Optionally show link for copy
-      document.getElementById('result').innerHTML = `✅ <strong>Direct link:</strong><br><a href="${link}" target="_blank">${link}</a>`;
-
-      // Immediately switch to viewer page without needing manual reload
-      showViewer(t, p, v, a, h);
+    function renderPosts() {
+      const postsDiv = document.getElementById('posts');
+      postsDiv.innerHTML = '';
+      posts.slice().reverse().forEach(p => {
+        const postEl = document.createElement('div');
+        postEl.className = 'post';
+        postEl.innerHTML = `<h2>${p.title}</h2>
+          <p>${p.desc}</p>`;
+        if (p.video) {
+          if (p.video.startsWith('http')) {
+            postEl.innerHTML += `<iframe src="${p.video}" frameborder="0" allowfullscreen></iframe>`;
+          } else {
+            postEl.innerHTML += `<video controls src="${p.video}"></video>`;
+          }
+        }
+        postsDiv.appendChild(postEl);
+      });
     }
 
-    function reveal() {
-      document.getElementById('theLink').innerHTML = `<a href="${window.hiddenLink}" target="_blank">${window.hiddenLink}</a>`;
+    function clearForm() {
+      document.getElementById('postTitle').value = '';
+      document.getElementById('postDescription').value = '';
+      document.getElementById('videoURL').value = '';
+      document.getElementById('videoFile').value = '';
     }
+
+    renderPosts();
   </script>
 
 </body>
