@@ -2,50 +2,128 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Redirect Maker with Random Codes</title>
+  <title>Redirect Maker</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #111;
+      color: #eee;
+      padding: 40px;
+      max-width: 700px;
+      margin: auto;
+    }
+
+    h1, h2 {
+      color: #0ff;
+      margin-bottom: 10px;
+    }
+
+    input {
+      width: 80%;
+      padding: 10px;
+      font-size: 1em;
+      border: none;
+      border-radius: 5px;
+      margin-bottom: 10px;
+    }
+
+    button {
+      padding: 10px 20px;
+      font-size: 1em;
+      background: #0ff;
+      color: #000;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #0cc;
+    }
+
+    #status {
+      margin-top: 15px;
+      color: #0f0;
+    }
+
+    ul {
+      list-style: none;
+      padding: 0;
+    }
+
+    li {
+      margin: 8px 0;
+      background: #222;
+      padding: 10px;
+      border-radius: 4px;
+    }
+
+    a {
+      color: #0ff;
+      text-decoration: none;
+    }
+
+    a:hover {
+      text-decoration: underline;
+    }
+  </style>
 </head>
 <body>
-  <h1>Redirect Maker</h1>
+  <h1>🚀 Redirect Maker</h1>
 
-  <input id="targetUrl" placeholder="Target URL" />
+  <input id="targetUrl" placeholder="Enter the site URL to redirect to..." />
   <button id="createBtn">Create Redirect</button>
 
   <p id="status"></p>
 
-  <h2>Recent Redirects</h2>
+  <h2>📜 Recent Redirects</h2>
   <ul id="recentList">Loading...</ul>
 
   <script>
     async function loadRecent() {
-      const res = await fetch('/api/list');
-      const list = await res.json();
-      const ul = document.getElementById('recentList');
-      ul.innerHTML = '';
-      list.forEach(item => {
-        const li = document.createElement('li');
-        li.innerHTML = `<a href="${item.url}" target="_blank">${window.location.origin}${item.url}</a> — ${new Date(item.created).toLocaleString()}`;
-        ul.appendChild(li);
-      });
+      try {
+        const res = await fetch('/api/list');
+        const list = await res.json();
+        const ul = document.getElementById('recentList');
+        ul.innerHTML = '';
+        list.forEach(item => {
+          const li = document.createElement('li');
+          li.innerHTML = `<a href="${item.url}" target="_blank">${window.location.origin}${item.url}</a> — ${new Date(item.created).toLocaleString()}`;
+          ul.appendChild(li);
+        });
+      } catch (err) {
+        document.getElementById('recentList').innerHTML = '❌ Failed to load recent redirects.';
+      }
     }
 
     document.getElementById('createBtn').onclick = async () => {
       const targetUrl = document.getElementById('targetUrl').value.trim();
       const status = document.getElementById('status');
       if (!targetUrl) {
-        status.textContent = 'Please enter a target URL!';
+        status.textContent = '⚠️ Please enter a target URL!';
+        status.style.color = 'orange';
         return;
       }
-      const res = await fetch('/create-redirect', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({ targetUrl })
-      });
-      const data = await res.json();
-      if (data.url) {
-        status.innerHTML = `✅ Created: <a href="${data.url}" target="_blank">${window.location.origin}${data.url}</a>`;
-        await loadRecent();
-      } else {
-        status.textContent = data.error || 'Error';
+      status.style.color = '#0ff';
+      status.textContent = 'Creating...';
+      try {
+        const res = await fetch('/create-redirect', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ targetUrl })
+        });
+        const data = await res.json();
+        if (data.url) {
+          status.innerHTML = `✅ Created: <a href="${data.url}" target="_blank">${window.location.origin}${data.url}</a>`;
+          status.style.color = '#0f0';
+          await loadRecent();
+        } else {
+          status.textContent = data.error || 'Error creating redirect.';
+          status.style.color = 'red';
+        }
+      } catch (err) {
+        status.textContent = '❌ Network error.';
+        status.style.color = 'red';
       }
     };
 
