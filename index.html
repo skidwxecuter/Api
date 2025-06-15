@@ -1,80 +1,52 @@
+<!-- index.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Redirect Link Generator</title>
+  <title>Redirect Site Maker</title>
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #111;
-      color: #eee;
-      text-align: center;
-      padding: 50px;
-    }
-    input {
-      padding: 10px;
-      width: 300px;
-      margin: 10px;
-    }
-    button {
-      padding: 10px 20px;
-      background: #0f0;
-      border: none;
-      cursor: pointer;
-    }
-    .box {
-      background: #222;
-      padding: 30px;
-      border-radius: 10px;
-      display: inline-block;
-    }
+    body { font-family: Arial, sans-serif; max-width: 600px; margin: 40px auto; }
+    input, button { padding: 10px; margin: 5px 0; width: 100%; }
+    button { cursor: pointer; }
   </style>
 </head>
 <body>
-  <h1>Redirect Link Generator</h1>
-  <div class="box">
-    <p>Site to redirect to:</p>
-    <input type="text" id="target" placeholder="https://example.com">
-    <p>Site name (folder):</p>
-    <input type="text" id="sitename" placeholder="myredirect">
-    <br>
-    <button onclick="createRedirect()">Create Redirect Site</button>
-    <p id="msg"></p>
-  </div>
+  <h1>Redirect Site Maker</h1>
+
+  <label>Target URL:</label>
+  <input type="url" id="targetUrl" placeholder="https://example.com">
+
+  <label>Custom Site Name (optional):</label>
+  <input type="text" id="siteName" placeholder="my-custom-redirect">
+
+  <button onclick="createRedirect()">Create Redirect Site</button>
+
+  <h3 id="result"></h3>
 
   <script>
-    function createRedirect() {
-      const target = document.getElementById('target').value.trim();
-      const sitename = document.getElementById('sitename').value.trim();
-      const msg = document.getElementById('msg');
-
-      if (!target || !sitename) {
-        msg.innerText = 'Please fill in both fields.';
+    async function createRedirect() {
+      const targetUrl = document.getElementById('targetUrl').value;
+      const siteName = document.getElementById('siteName').value;
+      if (!targetUrl) {
+        alert('Please enter a target URL!');
         return;
       }
 
-      const html = `
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta http-equiv="refresh" content="0; url=${target}" />
-  <title>Redirecting...</title>
-</head>
-<body>
-  <p>If you are not redirected, <a href="${target}">click here</a>.</p>
-</body>
-</html>`;
+      const response = await fetch('https://YOUR_RENDER_BACKEND_URL/create-redirect', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ targetUrl, siteName })
+      });
 
-      // Create a Blob
-      const blob = new Blob([html], { type: 'text/html' });
-
-      // Create a ZIP-like folder (just a single file)
-      const link = document.createElement('a');
-      link.href = URL.createObjectURL(blob);
-      link.download = sitename + '.html';
-      link.click();
-
-      msg.innerText = 'Redirect file generated! Upload it to Netlify or your host.';
+      const data = await response.json();
+      if (data.siteUrl) {
+        document.getElementById('result').innerHTML = `
+          ✅ Site created!<br>
+          <a href="${data.siteUrl}" target="_blank">${data.siteUrl}</a>
+        `;
+      } else {
+        document.getElementById('result').innerText = 'Error: ' + JSON.stringify(data);
+      }
     }
   </script>
 </body>
