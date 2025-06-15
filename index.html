@@ -2,12 +2,11 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Redirect Maker</title>
+  <title>Redirect Maker with Random Codes</title>
 </head>
 <body>
   <h1>Redirect Maker</h1>
 
-  <input id="siteName" placeholder="Site Name" />
   <input id="targetUrl" placeholder="Target URL" />
   <button id="createBtn">Create Redirect</button>
 
@@ -30,22 +29,21 @@
     }
 
     document.getElementById('createBtn').onclick = async () => {
-      const siteName = document.getElementById('siteName').value.trim();
       const targetUrl = document.getElementById('targetUrl').value.trim();
       const status = document.getElementById('status');
-      if (!siteName || !targetUrl) {
-        status.textContent = 'Fill in both fields!';
+      if (!targetUrl) {
+        status.textContent = 'Please enter a target URL!';
         return;
       }
       const res = await fetch('/create-redirect', {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({ siteName, targetUrl })
+        body: JSON.stringify({ targetUrl })
       });
       const data = await res.json();
       if (data.url) {
         status.innerHTML = `✅ Created: <a href="${data.url}" target="_blank">${window.location.origin}${data.url}</a>`;
-        await loadRecent(); // refresh list
+        await loadRecent();
       } else {
         status.textContent = data.error || 'Error';
       }
