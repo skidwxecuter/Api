@@ -1,44 +1,74 @@
+import express from 'express';
+import cors from 'cors';
+import bodyParser from 'body-parser';
+import fs from 'fs';
+import path from 'path';
+
+const app = express();
+app.use(cors());
+app.use(bodyParser.json());
+app.use(express.static('public'));
+
+// Ensure /public exists
+const publicDir = path.join(process.cwd(), 'public');
+if (!fs.existsSync(publicDir)) {
+  fs.mkdirSync(publicDir);
+}
+
+// Ensure redirects.json exists
+const dbPath = path.join(publicDir, 'redirects.json');
+if (!fs.existsSync(dbPath)) {
+  fs.writeFileSync(dbPath, JSON.stringify([]));
+}
+
+// Create redirect endpoint
+app.post('/create-redirect', (req, res) => {
+  const { targetUrl, siteName } = req.body;
+
+  if (!targetUrl || !siteName) {
+    return res.status(400).json({ error: 'Missing targetUrl or siteName' });
+  }
+
+  const html = `
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>Permanent Redirect Maker</title>
-  <style>
-    body { background: #111; color: #eee; font-family: sans-serif; padding: 2rem; }
-    input, button { width: 100%; padding: 0.5rem; margin: 0.5rem 0; }
-  </style>
+  <meta http-equiv="refresh" content="0; url=${targetUrl}" />
+  <title>Redirecting...</title>
 </head>
 <body>
-  <h1>Permanent Redirect Generator</h1>
-  <input id="name" placeholder="Site name (e.g. mylink)" />
-  <input id="url" placeholder="Redirect URL (https://...)" />
-  <button id="make">Create</button>
-  <p id="result"></p>
-
-  <script>
-    document.getElementById('make').onclick = async () => {
-      const name = document.getElementById('name').value.trim();
-      const url = document.getElementById('url').value.trim();
-      const result = document.getElementById('result');
-
-      if (!name || !url) {
-        result.textContent = 'Fill both fields.';
-        return;
-      }
-
-      const res = await fetch('https://YOUR-BACKEND-URL/create-redirect', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ siteName: name, targetUrl: url })
-      });
-
-      const data = await res.json();
-      if (data.url) {
-        result.innerHTML = `✅ Created: <a href="${data.url}" target="_blank">${data.url}</a>`;
-      } else {
-        result.textContent = `❌ ${data.error || 'Unknown error'}`;
-      }
-    };
-  </script>
+  <p>If you are not redirected, <a href="${targetUrl}">click here</a>.</p>
 </body>
-</html>
+</html>`.trim();
+
+  const filePath = path.join(publicDir, `${siteName}.html`);
+
+  fs.writeFile(filePath, html, (err) => {
+    if (err) {
+      console.error(err);
+      return res.status(500).json({ error: 'Failed to save file' });
+    }
+
+    // Save to redirects.json
+    const list = JSON.parse(fs.readFileSync(dbPath, 'utf-8'));
+    list.unshift({
+      name: siteName,
+      url: `/${siteName}.html`,
+      created: new Date().toISOString()
+    });
+    fs.writeFileSync(dbPath, JSON.stringify(list, null, 2));
+
+    return res.json({
+      url: `${req.protocol}://${req.get('host')}/${siteName}.html`
+    });
+  });
+});
+
+// Return recent redirects
+app.get('/list', (req, res) => {
+  const list = JSON.parse(fs.readFileSync(dbPath, 'utf-8'));
+  res.json(list);
+});
+
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
