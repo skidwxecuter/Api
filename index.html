@@ -3,199 +3,384 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard with Leaderboard</title>
-    <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Iconify for icons -->
-    <script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
-    <!-- jQuery -->
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <!-- ApexCharts -->
-    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+    <title>Roblox Cookie Checker</title>
     <style>
-        .rank-1 { background-color: #ffd700 !important; }
-        .rank-2 { background-color: #c0c0c0 !important; }
-        .rank-3 { background-color: #cd7f32 !important; }
-        .leaderboard-avatar {
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
-            margin-right: 8px;
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #1e1e2e;
+            color: #ffffff;
+            margin: 0;
+            padding: 20px;
+            line-height: 1.6;
         }
-        .table-hover tbody tr:hover {
-            transform: scale(1.01);
-            transition: transform 0.2s ease;
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background-color: #2a2a3a;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+        }
+        
+        h1 {
+            color: #7289da;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .input-area {
+            background-color: #363646;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        
+        textarea {
+            width: 100%;
+            height: 100px;
+            background-color: #2a2a3a;
+            border: 1px solid #7289da;
+            border-radius: 5px;
+            color: white;
+            padding: 10px;
+            font-family: monospace;
+            resize: vertical;
+            margin-bottom: 10px;
+        }
+        
+        button {
+            background-color: #7289da;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+        
+        button:hover {
+            background-color: #677bc4;
+        }
+        
+        .result {
+            display: none;
+            background-color: #363646;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+        
+        .user-info {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .avatar {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            margin-right: 20px;
+            object-fit: cover;
+            border: 3px solid #7289da;
+        }
+        
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 15px;
+        }
+        
+        .info-card {
+            background-color: #2a2a3a;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #7289da;
+        }
+        
+        .info-card h3 {
+            margin-top: 0;
+            color: #7289da;
+            font-size: 16px;
+        }
+        
+        .info-card p {
+            margin-bottom: 0;
+            font-size: 14px;
+            word-break: break-all;
+        }
+        
+        .error {
+            color: #ff6b6b;
+            text-align: center;
+            margin-top: 20px;
+            display: none;
+        }
+        
+        .loading {
+            text-align: center;
+            display: none;
+            margin: 20px 0;
+        }
+        
+        .spinner {
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top: 4px solid #7289da;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            color: #888;
+            font-size: 12px;
+        }
+        
+        .clean-notice {
+            background-color: #2a3a2a;
+            padding: 10px;
+            border-radius: 5px;
+            margin-top: 10px;
+            font-size: 13px;
+            display: none;
+        }
+        
+        .clean-notice code {
+            background-color: #1e1e1e;
+            padding: 2px 5px;
+            border-radius: 3px;
         }
     </style>
 </head>
 <body>
-    <div class="container py-4">
-        <!-- Your existing charts would go here -->
+    <div class="container">
+        <h1>Roblox Cookie Checker</h1>
         
-        <!-- Leaderboard Card -->
-        <div class="card mt-4">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <h5 class="mb-0">Top Performers</h5>
-                <div class="dropdown">
-                    <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" id="leaderboardFilter" data-bs-toggle="dropdown" aria-expanded="false">
-                        This Week
-                    </button>
-                    <ul class="dropdown-menu" aria-labelledby="leaderboardFilter">
-                        <li><a class="dropdown-item" href="#" data-period="week">This Week</a></li>
-                        <li><a class="dropdown-item" href="#" data-period="month">This Month</a></li>
-                        <li><a class="dropdown-item" href="#" data-period="all">All Time</a></li>
-                    </ul>
+        <div class="input-area">
+            <h2>Enter .ROBLOSECURITY Cookie</h2>
+            <textarea id="cookieInput" placeholder="Paste your .ROBLOSECURITY cookie here..."></textarea>
+            <div class="clean-notice" id="cleanNotice">
+                Removed <code>*</code> and <code>`</code> characters from your cookie
+            </div>
+            <button id="checkButton">Check Cookie</button>
+            <p style="font-size: 12px; color: #aaa;">Note: This tool runs entirely in your browser. Your cookie is not sent to any server.</p>
+        </div>
+        
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p>Fetching Roblox account data...</p>
+        </div>
+        
+        <div class="error" id="error">
+            ❌ There was an error checking the cookie. It may be invalid or expired.
+        </div>
+        
+        <div class="result" id="result">
+            <div class="user-info">
+                <img id="userAvatar" class="avatar" src="" alt="User Avatar">
+                <div>
+                    <h2 id="username">Username</h2>
+                    <p id="userId">User ID: </p>
+                    <p id="accountAge">Account Age: </p>
                 </div>
             </div>
-            <div class="card-body p-0">
-                <div class="table-responsive">
-                    <table class="table table-hover mb-0" id="leaderboardTable">
-                        <thead>
-                            <tr>
-                                <th class="text-center" style="width: 60px;">Rank</th>
-                                <th>User</th>
-                                <th class="text-end">Hits</th>
-                                <th class="text-end">Clicks</th>
-                                <th class="text-end">Accounts</th>
-                                <th class="text-end">Robux</th>
-                                <th class="text-end">Total</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <!-- Leaderboard data will be loaded here -->
-                            <tr>
-                                <td colspan="7" class="text-center py-4">Loading leaderboard data...</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
+            
+            <div class="info-grid" id="infoGrid">
+                <!-- Info cards will be inserted here by JavaScript -->
             </div>
+        </div>
+        
+        <div class="footer">
+            <p>This tool is for educational purposes only. Do not use it to access accounts without permission.</p>
         </div>
     </div>
 
-    <!-- Bootstrap JS Bundle with Popper -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-
     <script>
-    $(document).ready(function() {
-        // Check if charts exist on the page
-        if (document.getElementById('weeklyActivityChart') && document.getElementById('visitsBarChart') && 
-            document.getElementById('clicksBarChart') && document.getElementById('accountsBarChart') && 
-            document.getElementById("chart")) {
+        document.getElementById('checkButton').addEventListener('click', async function() {
+            let cookie = document.getElementById('cookieInput').value.trim();
+            const cleanNotice = document.getElementById('cleanNotice');
+            cleanNotice.style.display = 'none';
             
-            // Fetch data from API
-            $.ajax({
-                url: "/api/chart?type=Regular",
-                method: "POST",
-                headers: {
-                    "content-type": "application/json"
-                },
-                complete: function(data) {
-                    // Update your existing charts here
-                    $($('.fw-medium.text-sm.text-primary-light.mt-12.mb-0.d-flex.align-items-center.gap-2')[1]).html(`
-                        <span class="d-inline-flex align-items-center gap-1 text-${data.responseJSON['data']['account']['difference'] > 0 ? 'success' : 'danger'}-main">
-                            <iconify-icon icon="bxs:${data.responseJSON['data']['account']['difference'] > 0 ? 'up' : 'down'}-arrow" class="text-xs"></iconify-icon> 
-                            ${data.responseJSON['data']['account']['percent_change']}% (${Number(data.responseJSON['data']['account']['difference']).toLocaleString()})
-                        </span> 
-                        • +${Number(data.responseJSON['data']['account']['today']).toLocaleString()} today
-                    `);
-                    
-                    // Similar updates for other charts...
-
-                    // Populate leaderboard if data exists
-                    if (data.responseJSON.leaderboard) {
-                        populateLeaderboard(data.responseJSON.leaderboard);
-                    } else {
-                        // If no leaderboard data, show a message
-                        $('#leaderboardTable tbody').html(`
-                            <tr>
-                                <td colspan="7" class="text-center py-4">No leaderboard data available</td>
-                            </tr>
-                        `);
-                    }
-                },
-                error: function() {
-                    $('#leaderboardTable tbody').html(`
-                        <tr>
-                            <td colspan="7" class="text-center py-4 text-danger">Failed to load leaderboard data</td>
-                        </tr>
-                    `);
-                }
+            // Store original to compare if we modified it
+            const originalCookie = cookie;
+            
+            // Remove unwanted characters (* and `)
+            cookie = cookie.replace(/[*`]/g, '');
+            
+            // Show notice if we cleaned anything
+            if (cookie !== originalCookie) {
+                cleanNotice.style.display = 'block';
+            }
+            
+            if (!cookie) {
+                showError("Please enter a cookie");
+                return;
+            }
+            
+            // Show loading, hide other elements
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('error').style.display = 'none';
+            document.getElementById('result').style.display = 'none';
+            
+            try {
+                const userData = await fetchRobloxData(cookie);
+                displayResults(userData);
+            } catch (error) {
+                console.error("Error:", error);
+                showError("Failed to fetch account data. The cookie may be invalid or expired.");
+            } finally {
+                document.getElementById('loading').style.display = 'none';
+            }
+        });
+        
+        async function fetchRobloxData(cookie) {
+            // Set up headers with the cookie
+            const headers = {
+                'Content-Type': 'application/json',
+                'Cookie': `.ROBLOSECURITY=${cookie}`
+            };
+            
+            // Fetch basic user data
+            const userResponse = await fetch('https://users.roblox.com/v1/users/authenticated', {
+                headers: headers
             });
+            
+            if (!userResponse.ok) {
+                throw new Error("Invalid cookie");
+            }
+            
+            const userData = await userResponse.json();
+            const userId = userData.id;
+            
+            // Fetch all data in parallel
+            const [
+                currencyData,
+                premiumData,
+                emailData,
+                birthdayData,
+                pinData,
+                creditData,
+                groupsData,
+                followersData,
+                transactionsData,
+                avatarData
+            ] = await Promise.all([
+                fetch(`https://economy.roblox.com/v1/users/${userId}/currency`, { headers }).then(res => res.json()),
+                fetch(`https://premiumfeatures.roblox.com/v1/users/${userId}/validate-membership`, { headers }).then(res => res.json()),
+                fetch('https://accountsettings.roblox.com/v1/email', { headers }).then(res => res.json()),
+                fetch('https://accountinformation.roblox.com/v1/birthdate', { headers }).then(res => res.json()),
+                fetch('https://auth.roblox.com/v1/account/pin', { headers }).then(res => res.json()),
+                fetch('https://billing.roblox.com/v1/credit', { headers }).then(res => res.json()),
+                fetch(`https://groups.roblox.com/v1/users/${userId}/groups/roles`, { headers }).then(res => res.json()),
+                fetch(`https://friends.roblox.com/v1/users/${userId}/followers/count`, { headers }).then(res => res.json()),
+                fetch(`https://economy.roblox.com/v2/users/${userId}/transaction-totals?timeFrame=Month&transactionType=summary`, { headers }).then(res => res.json()),
+                fetch(`https://thumbnails.roblox.com/v1/users/avatar?userIds=${userId}&size=420x420&format=Png&isCircular=false`, { headers }).then(res => res.json())
+            ]);
+            
+            // Calculate group funds (simplified for this example)
+            let groupFunds = 0;
+            if (groupsData.data) {
+                const ownedGroups = groupsData.data.filter(group => group.group.owner.userId === userId);
+                for (const group of ownedGroups) {
+                    const groupCurrency = await fetch(`https://economy.roblox.com/v1/groups/${group.group.id}/currency`, { headers }).then(res => res.json());
+                    groupFunds += groupCurrency.robux || 0;
+                }
+            }
+            
+            // Get RAP (simplified - in a real app you'd need to paginate through all items)
+            let rap = 0;
+            try {
+                const inventoryResponse = await fetch(`https://inventory.roblox.com/v1/users/${userId}/assets/collectibles?assetType=All&sortOrder=Asc&limit=100`, { headers });
+                const inventoryData = await inventoryResponse.json();
+                if (inventoryData.data) {
+                    rap = inventoryData.data.reduce((sum, item) => sum + (item.recentAveragePrice || 0), 0);
+                }
+            } catch (e) {
+                console.error("Couldn't fetch RAP:", e);
+            }
+            
+            // Format the birthdate
+            const birthdate = `${birthdayData.birthMonth}/${birthdayData.birthDay}/${birthdayData.birthYear}`;
+            
+            return {
+                username: userData.name,
+                displayName: userData.displayName,
+                userId: userId,
+                robux: currencyData.robux || 0,
+                premium: premiumData.hasMembership || false,
+                emailVerified: emailData.verified || false,
+                pinEnabled: pinData.isEnabled || false,
+                credit: creditData.balance || 0,
+                groupFunds: groupFunds,
+                followers: followersData.count || 0,
+                pendingRobux: transactionsData.pendingRobuxTotal || 0,
+                premiumStipends: transactionsData.premiumStipendsTotal || 0,
+                developerExchange: transactionsData.developerExchangeTotal || 0,
+                rap: rap,
+                birthdate: birthdate,
+                avatarUrl: avatarData.data[0]?.imageUrl || '',
+                creationDate: new Date(userData.created).toLocaleDateString(),
+                cookie: cookie
+            };
         }
-
-        // Leaderboard filter dropdown
-        $(document).on('click', '.dropdown-item[data-period]', function(e) {
-            e.preventDefault();
-            const period = $(this).data('period');
-            $('#leaderboardFilter').text($(this).text());
-            
-            // Here you would typically make another AJAX call to get filtered data
-            // For now, we'll just show a loading message
-            $('#leaderboardTable tbody').html(`
-                <tr>
-                    <td colspan="7" class="text-center py-4">Loading ${period} data...</td>
-                </tr>
-            `);
-            
-            // Simulate loading new data (replace with actual AJAX call)
-            setTimeout(() => {
-                // This would be replaced with actual API call
-                // $.ajax({...}).then(function(data) { populateLeaderboard(data.leaderboard); });
-                
-                // For demo, we'll just show a message
-                $('#leaderboardTable tbody').html(`
-                    <tr>
-                        <td colspan="7" class="text-center py-4">Would load ${period} data here</td>
-                    </tr>
-                `);
-            }, 1000);
-        });
-    });
-
-    function populateLeaderboard(leaderboardData) {
-        const tbody = $('#leaderboardTable tbody');
-        tbody.empty();
         
-        // Sort by total score (or your preferred metric)
-        leaderboardData.sort((a, b) => (b.total || (b.hits + b.clicks + b.accounts + b.robux)) - 
-                                      (a.total || (a.hits + a.clicks + a.accounts + a.robux)));
-        
-        // Add each user to the leaderboard
-        leaderboardData.forEach((user, index) => {
-            const rank = index + 1;
-            const totalScore = user.total || (user.hits + user.clicks + user.accounts + user.robux);
+        function displayResults(data) {
+            // Set basic user info
+            document.getElementById('username').textContent = data.username;
+            document.getElementById('userId').textContent = `User ID: ${data.userId}`;
+            document.getElementById('accountAge').textContent = `Created: ${data.creationDate}`;
+            document.getElementById('userAvatar').src = data.avatarUrl;
             
-            const row = $(`
-                <tr class="${rank <= 3 ? 'rank-' + rank : ''}">
-                    <td class="text-center fw-bold">${rank}</td>
-                    <td>
-                        <div class="d-flex align-items-center">
-                            <img src="${user.avatar || 'https://www.roblox.com/Thumbs/Avatar.ashx?x=150&y=150&username=' + encodeURIComponent(user.username)}" 
-                                 class="leaderboard-avatar" alt="${user.username}">
-                            <span>${user.username}</span>
-                        </div>
-                    </td>
-                    <td class="text-end">${user.hits ? user.hits.toLocaleString() : '0'}</td>
-                    <td class="text-end">${user.clicks ? user.clicks.toLocaleString() : '0'}</td>
-                    <td class="text-end">${user.accounts ? user.accounts.toLocaleString() : '0'}</td>
-                    <td class="text-end">${user.robux ? user.robux.toLocaleString() : '0'}</td>
-                    <td class="text-end fw-bold">${totalScore.toLocaleString()}</td>
-                </tr>
-            `);
+            // Create info cards
+            const infoGrid = document.getElementById('infoGrid');
+            infoGrid.innerHTML = '';
             
-            tbody.append(row);
-        });
-        
-        // If no data, show message
-        if (leaderboardData.length === 0) {
-            tbody.html(`
-                <tr>
-                    <td colspan="7" class="text-center py-4">No users found in the leaderboard</td>
-                </tr>
-            `);
+            const infoCards = [
+                { title: 'Display Name', value: data.displayName, emoji: '👀' },
+                { title: 'Robux Balance', value: data.robux.toLocaleString(), emoji: '💰' },
+                { title: 'Premium', value: data.premium ? 'Yes' : 'No', emoji: '💎' },
+                { title: 'RAP (Estimated)', value: data.rap.toLocaleString(), emoji: '📈' },
+                { title: 'Credit Balance', value: data.credit.toLocaleString(), emoji: '💵' },
+                { title: 'Group Funds', value: data.groupFunds.toLocaleString(), emoji: '🤑' },
+                { title: 'Email Verified', value: data.emailVerified ? 'Yes' : 'No', emoji: '📩' },
+                { title: 'PIN Enabled', value: data.pinEnabled ? 'Yes' : 'No', emoji: '🔐' },
+                { title: 'Followers', value: data.followers.toLocaleString(), emoji: '🎥' },
+                { title: 'Pending Robux', value: data.pendingRobux.toLocaleString(), emoji: '⌛' },
+                { title: 'Premium Stipends', value: data.premiumStipends.toLocaleString(), emoji: '💳' },
+                { title: 'Dev Exchange', value: data.developerExchange.toLocaleString(), emoji: '💱' },
+                { title: 'Birthday', value: data.birthdate, emoji: '🎂' }
+            ];
+            
+            infoCards.forEach(card => {
+                const cardElement = document.createElement('div');
+                cardElement.className = 'info-card';
+                cardElement.innerHTML = `
+                    <h3>${card.emoji} ${card.title}</h3>
+                    <p>${card.value}</p>
+                `;
+                infoGrid.appendChild(cardElement);
+            });
+            
+            // Show the result
+            document.getElementById('result').style.display = 'block';
         }
-    }
+        
+        function showError(message) {
+            const errorElement = document.getElementById('error');
+            errorElement.textContent = message;
+            errorElement.style.display = 'block';
+        }
     </script>
 </body>
 </html>
