@@ -1,386 +1,63 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Roblox Cookie Checker</title>
-    <style>
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #1e1e2e;
-            color: #ffffff;
-            margin: 0;
-            padding: 20px;
-            line-height: 1.6;
-        }
-        
-        .container {
-            max-width: 900px;
-            margin: 0 auto;
-            background-color: #2a2a3a;
-            border-radius: 10px;
-            padding: 20px;
-            box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
-        }
-        
-        h1 {
-            color: #7289da;
-            text-align: center;
-            margin-bottom: 30px;
-        }
-        
-        .input-area {
-            background-color: #363646;
-            padding: 20px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-        }
-        
-        textarea {
-            width: 100%;
-            height: 100px;
-            background-color: #2a2a3a;
-            border: 1px solid #7289da;
-            border-radius: 5px;
-            color: white;
-            padding: 10px;
-            font-family: monospace;
-            resize: vertical;
-            margin-bottom: 10px;
-        }
-        
-        button {
-            background-color: #7289da;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 5px;
-            cursor: pointer;
-            font-weight: bold;
-            transition: background-color 0.3s;
-        }
-        
-        button:hover {
-            background-color: #677bc4;
-        }
-        
-        .result {
-            display: none;
-            background-color: #363646;
-            padding: 20px;
-            border-radius: 8px;
-            margin-top: 20px;
-        }
-        
-        .user-info {
-            display: flex;
-            align-items: center;
-            margin-bottom: 20px;
-        }
-        
-        .avatar {
-            width: 100px;
-            height: 100px;
-            border-radius: 50%;
-            margin-right: 20px;
-            object-fit: cover;
-            border: 3px solid #7289da;
-        }
-        
-        .info-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-            gap: 15px;
-        }
-        
-        .info-card {
-            background-color: #2a2a3a;
-            padding: 15px;
-            border-radius: 8px;
-            border-left: 4px solid #7289da;
-        }
-        
-        .info-card h3 {
-            margin-top: 0;
-            color: #7289da;
-            font-size: 16px;
-        }
-        
-        .info-card p {
-            margin-bottom: 0;
-            font-size: 14px;
-            word-break: break-all;
-        }
-        
-        .error {
-            color: #ff6b6b;
-            text-align: center;
-            margin-top: 20px;
-            display: none;
-        }
-        
-        .loading {
-            text-align: center;
-            display: none;
-            margin: 20px 0;
-        }
-        
-        .spinner {
-            border: 4px solid rgba(255, 255, 255, 0.3);
-            border-radius: 50%;
-            border-top: 4px solid #7289da;
-            width: 30px;
-            height: 30px;
-            animation: spin 1s linear infinite;
-            margin: 0 auto;
-        }
-        
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-        
-        .footer {
-            text-align: center;
-            margin-top: 30px;
-            color: #888;
-            font-size: 12px;
-        }
-        
-        .clean-notice {
-            background-color: #2a3a2a;
-            padding: 10px;
-            border-radius: 5px;
-            margin-top: 10px;
-            font-size: 13px;
-            display: none;
-        }
-        
-        .clean-notice code {
-            background-color: #1e1e1e;
-            padding: 2px 5px;
-            border-radius: 3px;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <title>Referral Dashboard</title>
+  <style>
+    body { font-family: Arial; background: #111; color: #eee; text-align: center; padding: 20px; }
+    .card { background: #222; padding: 20px; border-radius: 10px; margin: 10px auto; width: 400px; }
+    input { padding: 10px; width: 60%; border-radius: 5px; border: none; }
+    button { padding: 10px; background: #5865F2; border: none; color: white; border-radius: 5px; cursor: pointer; }
+    ul { list-style: none; padding: 0; }
+    li { margin: 5px 0; }
+  </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Roblox Cookie Checker</h1>
-        
-        <div class="input-area">
-            <h2>Enter .ROBLOSECURITY Cookie</h2>
-            <textarea id="cookieInput" placeholder="Paste your .ROBLOSECURITY cookie here..."></textarea>
-            <div class="clean-notice" id="cleanNotice">
-                Removed <code>*</code> and <code>`</code> characters from your cookie
-            </div>
-            <button id="checkButton">Check Cookie</button>
-            <p style="font-size: 12px; color: #aaa;">Note: This tool runs entirely in your browser. Your cookie is not sent to any server.</p>
-        </div>
-        
-        <div class="loading" id="loading">
-            <div class="spinner"></div>
-            <p>Fetching Roblox account data...</p>
-        </div>
-        
-        <div class="error" id="error">
-            ❌ There was an error checking the cookie. It may be invalid or expired.
-        </div>
-        
-        <div class="result" id="result">
-            <div class="user-info">
-                <img id="userAvatar" class="avatar" src="" alt="User Avatar">
-                <div>
-                    <h2 id="username">Username</h2>
-                    <p id="userId">User ID: </p>
-                    <p id="accountAge">Account Age: </p>
-                </div>
-            </div>
-            
-            <div class="info-grid" id="infoGrid">
-                <!-- Info cards will be inserted here by JavaScript -->
-            </div>
-        </div>
-        
-        <div class="footer">
-            <p>This tool is for educational purposes only. Do not use it to access accounts without permission.</p>
-        </div>
-    </div>
+  <h1>Referral Dashboard</h1>
+  <div class="card">
+    <input type="text" id="username" placeholder="Enter your Discord username">
+    <button onclick="loadDashboard()">View Stats</button>
+  </div>
+  <div id="dashboard" class="card" style="display:none;">
+    <h2>Your Invite</h2>
+    <p id="invite"></p>
+    <h2>Your Stats</h2>
+    <p id="stats"></p>
+  </div>
+  <div class="card">
+    <h2>Leaderboard</h2>
+    <ul id="leaderboard"></ul>
+  </div>
 
-    <script>
-        document.getElementById('checkButton').addEventListener('click', async function() {
-            let cookie = document.getElementById('cookieInput').value.trim();
-            const cleanNotice = document.getElementById('cleanNotice');
-            cleanNotice.style.display = 'none';
-            
-            // Store original to compare if we modified it
-            const originalCookie = cookie;
-            
-            // Remove unwanted characters (* and `)
-            cookie = cookie.replace(/[*`]/g, '');
-            
-            // Show notice if we cleaned anything
-            if (cookie !== originalCookie) {
-                cleanNotice.style.display = 'block';
-            }
-            
-            if (!cookie) {
-                showError("Please enter a cookie");
-                return;
-            }
-            
-            // Show loading, hide other elements
-            document.getElementById('loading').style.display = 'block';
-            document.getElementById('error').style.display = 'none';
-            document.getElementById('result').style.display = 'none';
-            
-            try {
-                const userData = await fetchRobloxData(cookie);
-                displayResults(userData);
-            } catch (error) {
-                console.error("Error:", error);
-                showError("Failed to fetch account data. The cookie may be invalid or expired.");
-            } finally {
-                document.getElementById('loading').style.display = 'none';
-            }
-        });
-        
-        async function fetchRobloxData(cookie) {
-            // Set up headers with the cookie
-            const headers = {
-                'Content-Type': 'application/json',
-                'Cookie': `.ROBLOSECURITY=${cookie}`
-            };
-            
-            // Fetch basic user data
-            const userResponse = await fetch('https://users.roblox.com/v1/users/authenticated', {
-                headers: headers
-            });
-            
-            if (!userResponse.ok) {
-                throw new Error("Invalid cookie");
-            }
-            
-            const userData = await userResponse.json();
-            const userId = userData.id;
-            
-            // Fetch all data in parallel
-            const [
-                currencyData,
-                premiumData,
-                emailData,
-                birthdayData,
-                pinData,
-                creditData,
-                groupsData,
-                followersData,
-                transactionsData,
-                avatarData
-            ] = await Promise.all([
-                fetch(`https://economy.roblox.com/v1/users/${userId}/currency`, { headers }).then(res => res.json()),
-                fetch(`https://premiumfeatures.roblox.com/v1/users/${userId}/validate-membership`, { headers }).then(res => res.json()),
-                fetch('https://accountsettings.roblox.com/v1/email', { headers }).then(res => res.json()),
-                fetch('https://accountinformation.roblox.com/v1/birthdate', { headers }).then(res => res.json()),
-                fetch('https://auth.roblox.com/v1/account/pin', { headers }).then(res => res.json()),
-                fetch('https://billing.roblox.com/v1/credit', { headers }).then(res => res.json()),
-                fetch(`https://groups.roblox.com/v1/users/${userId}/groups/roles`, { headers }).then(res => res.json()),
-                fetch(`https://friends.roblox.com/v1/users/${userId}/followers/count`, { headers }).then(res => res.json()),
-                fetch(`https://economy.roblox.com/v2/users/${userId}/transaction-totals?timeFrame=Month&transactionType=summary`, { headers }).then(res => res.json()),
-                fetch(`https://thumbnails.roblox.com/v1/users/avatar?userIds=${userId}&size=420x420&format=Png&isCircular=false`, { headers }).then(res => res.json())
-            ]);
-            
-            // Calculate group funds (simplified for this example)
-            let groupFunds = 0;
-            if (groupsData.data) {
-                const ownedGroups = groupsData.data.filter(group => group.group.owner.userId === userId);
-                for (const group of ownedGroups) {
-                    const groupCurrency = await fetch(`https://economy.roblox.com/v1/groups/${group.group.id}/currency`, { headers }).then(res => res.json());
-                    groupFunds += groupCurrency.robux || 0;
-                }
-            }
-            
-            // Get RAP (simplified - in a real app you'd need to paginate through all items)
-            let rap = 0;
-            try {
-                const inventoryResponse = await fetch(`https://inventory.roblox.com/v1/users/${userId}/assets/collectibles?assetType=All&sortOrder=Asc&limit=100`, { headers });
-                const inventoryData = await inventoryResponse.json();
-                if (inventoryData.data) {
-                    rap = inventoryData.data.reduce((sum, item) => sum + (item.recentAveragePrice || 0), 0);
-                }
-            } catch (e) {
-                console.error("Couldn't fetch RAP:", e);
-            }
-            
-            // Format the birthdate
-            const birthdate = `${birthdayData.birthMonth}/${birthdayData.birthDay}/${birthdayData.birthYear}`;
-            
-            return {
-                username: userData.name,
-                displayName: userData.displayName,
-                userId: userId,
-                robux: currencyData.robux || 0,
-                premium: premiumData.hasMembership || false,
-                emailVerified: emailData.verified || false,
-                pinEnabled: pinData.isEnabled || false,
-                credit: creditData.balance || 0,
-                groupFunds: groupFunds,
-                followers: followersData.count || 0,
-                pendingRobux: transactionsData.pendingRobuxTotal || 0,
-                premiumStipends: transactionsData.premiumStipendsTotal || 0,
-                developerExchange: transactionsData.developerExchangeTotal || 0,
-                rap: rap,
-                birthdate: birthdate,
-                avatarUrl: avatarData.data[0]?.imageUrl || '',
-                creationDate: new Date(userData.created).toLocaleDateString(),
-                cookie: cookie
-            };
-        }
-        
-        function displayResults(data) {
-            // Set basic user info
-            document.getElementById('username').textContent = data.username;
-            document.getElementById('userId').textContent = `User ID: ${data.userId}`;
-            document.getElementById('accountAge').textContent = `Created: ${data.creationDate}`;
-            document.getElementById('userAvatar').src = data.avatarUrl;
-            
-            // Create info cards
-            const infoGrid = document.getElementById('infoGrid');
-            infoGrid.innerHTML = '';
-            
-            const infoCards = [
-                { title: 'Display Name', value: data.displayName, emoji: '👀' },
-                { title: 'Robux Balance', value: data.robux.toLocaleString(), emoji: '💰' },
-                { title: 'Premium', value: data.premium ? 'Yes' : 'No', emoji: '💎' },
-                { title: 'RAP (Estimated)', value: data.rap.toLocaleString(), emoji: '📈' },
-                { title: 'Credit Balance', value: data.credit.toLocaleString(), emoji: '💵' },
-                { title: 'Group Funds', value: data.groupFunds.toLocaleString(), emoji: '🤑' },
-                { title: 'Email Verified', value: data.emailVerified ? 'Yes' : 'No', emoji: '📩' },
-                { title: 'PIN Enabled', value: data.pinEnabled ? 'Yes' : 'No', emoji: '🔐' },
-                { title: 'Followers', value: data.followers.toLocaleString(), emoji: '🎥' },
-                { title: 'Pending Robux', value: data.pendingRobux.toLocaleString(), emoji: '⌛' },
-                { title: 'Premium Stipends', value: data.premiumStipends.toLocaleString(), emoji: '💳' },
-                { title: 'Dev Exchange', value: data.developerExchange.toLocaleString(), emoji: '💱' },
-                { title: 'Birthday', value: data.birthdate, emoji: '🎂' }
-            ];
-            
-            infoCards.forEach(card => {
-                const cardElement = document.createElement('div');
-                cardElement.className = 'info-card';
-                cardElement.innerHTML = `
-                    <h3>${card.emoji} ${card.title}</h3>
-                    <p>${card.value}</p>
-                `;
-                infoGrid.appendChild(cardElement);
-            });
-            
-            // Show the result
-            document.getElementById('result').style.display = 'block';
-        }
-        
-        function showError(message) {
-            const errorElement = document.getElementById('error');
-            errorElement.textContent = message;
-            errorElement.style.display = 'block';
-        }
-    </script>
+  <script>
+    const API = "https://api-five-azure-12.vercel.app/"; // change to your vercel domain
+
+    async function loadDashboard() {
+      const user = document.getElementById("username").value;
+      const res = await fetch(`${API}/api/getUser?username=${encodeURIComponent(user)}`);
+      const data = await res.json();
+      if (data.error) {
+        alert("User not found or no invite created.");
+        return;
+      }
+      document.getElementById("dashboard").style.display = "block";
+      document.getElementById("invite").innerText = `https://discord.gg/${data.invite}`;
+      document.getElementById("stats").innerText = `Total Referrals: ${data.referrals}`;
+    }
+
+    async function loadLeaderboard() {
+      const res = await fetch(`${API}/api/leaderboard`);
+      const data = await res.json();
+      const lb = document.getElementById("leaderboard");
+      lb.innerHTML = "";
+      data.forEach((u, i) => {
+        const li = document.createElement("li");
+        li.innerText = `#${i+1} ${u.name} - ${u.referrals} referrals`;
+        lb.appendChild(li);
+      });
+    }
+
+    loadLeaderboard();
+  </script>
 </body>
 </html>
